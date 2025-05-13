@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { getKV, setKV } from '@/lib/kv';
 import { signIn } from 'next-auth/react';
+import bcrypt from 'bcryptjs';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -14,21 +15,22 @@ export default function Signup() {
     e.preventDefault();
     try {
       // Verificar se o usuário já existe
-      const existingUser = await getKV(`user:${email}`);
-      if (existingUser) {
+      const existingUserData = await getKV(`user:${email}`);
+      if (existingUserData) {
         throw new Error('Usuário já cadastrado');
       }
 
-      // Criar novo usuário
+      // Criar novo usuário com senha hasheada
+      const hashedPassword = await bcrypt.hash(password, 10);
       const userData = {
         name,
         email,
-        password, // Em produção, use bcrypt para hash
+        password: hashedPassword,
         phones: [],
       };
       await setKV(`user:${email}`, JSON.stringify(userData));
 
-      // Fazer login automático após cadastro
+      // Fazer login automático
       const result = await signIn('credentials', {
         redirect: false,
         email,
