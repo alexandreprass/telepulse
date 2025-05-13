@@ -39,6 +39,9 @@ export default function Signup() {
         throw new Error(loginData.error || 'Erro ao fazer login');
       }
 
+      // Salvar o token no localStorage
+      localStorage.setItem('token', loginData.token);
+
       console.log('[Signup] Redirecionando para /dashboard');
       router.push('/dashboard');
     } catch (err) {
