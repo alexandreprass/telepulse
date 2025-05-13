@@ -13,7 +13,6 @@ export default function Signup() {
     setError('');
 
     try {
-      // Cadastrar usuário
       console.log('[Signup] Enviando cadastro:', { name, email });
       const signupResponse = await fetch('/api/signup', {
         method: 'POST',
@@ -27,7 +26,6 @@ export default function Signup() {
         throw new Error(signupData.error || 'Erro ao cadastrar usuário');
       }
 
-      // Fazer login automático
       console.log('[Signup] Tentando login automático para:', email);
       const loginResponse = await fetch('/api/login', {
         method: 'POST',
