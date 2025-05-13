@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { signIn } from 'next-auth/react';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -14,29 +13,32 @@ export default function Signup() {
     setError('');
 
     try {
+      // Cadastrar usuário
       console.log('[Signup] Enviando cadastro:', { name, email });
-      const response = await fetch('/api/signup', {
+      const signupResponse = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await response.json();
-      console.log('[Signup] Resposta de /api/signup:', data);
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao cadastrar usuário');
+      const signupData = await signupResponse.json();
+      console.log('[Signup] Resposta de /api/signup:', signupData);
+      if (!signupResponse.ok) {
+        throw new Error(signupData.error || 'Erro ao cadastrar usuário');
       }
 
+      // Fazer login automático
       console.log('[Signup] Tentando login automático para:', email);
-      const result = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
+      const loginResponse = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      console.log('[Signup] Resultado do signIn:', result);
-      if (result.error) {
-        throw new Error(result.error);
+      const loginData = await loginResponse.json();
+      console.log('[Signup] Resposta de /api/login:', loginData);
+      if (!loginResponse.ok) {
+        throw new Error(loginData.error || 'Erro ao fazer login');
       }
 
       console.log('[Signup] Redirecionando para /dashboard');
