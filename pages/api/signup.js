@@ -13,13 +13,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verificar se o usuário já existe
+    console.log(`[Signup API] Verificando usuário: user:${email}`);
     const existingUserData = await getKV(`user:${email}`);
     if (existingUserData) {
+      console.log(`[Signup API] Usuário já existe: ${email}`);
       return res.status(400).json({ error: 'Usuário já cadastrado' });
     }
 
-    // Criar novo usuário com senha hasheada
+    console.log(`[Signup API] Criando usuário: ${email}`);
     const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
       name,
@@ -28,9 +29,11 @@ export default async function handler(req, res) {
       phones: [],
     };
     await setKV(`user:${email}`, JSON.stringify(userData));
+    console.log(`[Signup API] Usuário salvo: ${email}`);
 
     return res.status(200).json({ message: 'Usuário cadastrado com sucesso' });
   } catch (err) {
+    console.error(`[Signup API] Erro ao cadastrar:`, err);
     return res.status(500).json({ error: `Erro ao cadastrar: ${err.message}` });
   }
 }
