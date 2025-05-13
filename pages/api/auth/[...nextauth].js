@@ -17,17 +17,23 @@ export default NextAuth({
         }
 
         const userData = await getKV(`user:${credentials.email}`);
+        console.log('Valor retornado por getKV no authorize:', userData); // Adicionado console.log
         if (!userData) {
           throw new Error('Usuário não encontrado');
         }
 
-        const user = JSON.parse(userData);
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) {
-          throw new Error('Senha incorreta');
-        }
+        try {
+          const user = JSON.parse(userData);
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) {
+            throw new Error('Senha incorreta');
+          }
 
-        return { email: user.email, name: user.name, phones: user.phones };
+          return { email: user.email, name: user.name, phones: user.phones };
+        } catch (error) {
+          console.error('Erro ao parsear userData no authorize:', error);
+          throw new Error('Erro ao verificar credenciais');
+        }
       },
     }),
   ],
