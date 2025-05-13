@@ -30,20 +30,24 @@ export default NextAuth({
           }
 
           let user;
-          try {
-            if (typeof userData !== 'string') {
-              console.error(`[NextAuth] userData não é string:`, userData);
-              throw new Error('Formato de dados inválido');
+          if (typeof userData === 'string') {
+            try {
+              user = JSON.parse(userData);
+              console.log(`[NextAuth] Usuário parseado de string:`, user);
+            } catch (parseError) {
+              console.error(`[NextAuth] Erro ao parsear userData string:`, parseError, `userData:`, userData);
+              throw new Error('Dados do usuário inválidos');
             }
-            user = JSON.parse(userData);
-            console.log(`[NextAuth] Usuário parseado com sucesso:`, user);
-          } catch (parseError) {
-            console.error(`[NextAuth] Erro ao parsear userData:`, parseError, `userData bruto:`, userData);
-            throw new Error('Dados do usuário inválidos');
+          } else if (typeof userData === 'object' && userData !== null) {
+            user = userData;
+            console.log(`[NextAuth] Usuário recebido como objeto:`, user);
+          } else {
+            console.error(`[NextAuth] Formato de userData inválido:`, userData);
+            throw new Error('Formato de dados inválido');
           }
 
-          if (!user || !user.password) {
-            console.error(`[NextAuth] Usuário ou senha ausentes:`, user);
+          if (!user || !user.password || !user.email) {
+            console.error(`[NextAuth] Dados do usuário incompletos:`, user);
             throw new Error('Dados do usuário incompletos');
           }
 
@@ -55,7 +59,7 @@ export default NextAuth({
           }
 
           console.log(`[NextAuth] Autenticação bem-sucedida para ${credentials.email}`);
-          return { email: user.email, name: user.name, phones: user.phones };
+          return { email: user.email, name: user.name, phones: user.phones || [] };
         } catch (error) {
           console.error(`[NextAuth] Erro na autenticação:`, error);
           throw new Error(`Erro ao verificar credenciais: ${error.message}`);
