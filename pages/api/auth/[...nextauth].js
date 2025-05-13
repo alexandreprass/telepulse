@@ -1,49 +1,53 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { getKV } from '@/lib/kv';
 import bcrypt from 'bcryptjs';
-import { getKV } from '../../../lib/kv';
 
 export default NextAuth({
   providers: [
     CredentialsProvider({
-      name: 'Credenciais',
+      name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Senha', type: 'password' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
-        const userData = await getKV(`user:${email}`);
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e senha são obrigatórios');
+        }
+
+        const userData = await getKV(`user:${credentials.email}`);
         if (!userData) {
           throw new Error('Usuário não encontrado');
         }
-        const user = typeof userData === 'string' ? JSON.parse(userData) : userData;
-        const isValid = await bcrypt.compare(password, user.password);
+
+        const user = JSON.parse(userData);
+        const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error('Senha incorreta');
         }
-        return { id: user.email, name: user.name, email: user.email, phones: user.phones || [] };
+
+        return { email: user.email, name: user.name, phones: user.phones };
       },
     }),
   ],
+  session: {
+    strategy: 'jwt',
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.email = user.email;
-        token.name = user.name;
         token.phones = user.phones;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.email = token.email;
-      session.user.name = token.name;
       session.user.phones = token.phones;
       return session;
     },
   },
   pages: {
     signIn: '/',
-    signUp: '/signup',
   },
+  secret: process.env.NEXTAUTH_SECRET,
 });
