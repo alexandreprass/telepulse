@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import BulkMessage from '../components/BulkMessage';
 import AddMembers from '../components/AddMembers';
-import { getKV, setKV } from '../lib/kv';
-import { loginWithTelegram } from '../lib/telegram';
+import { getKV, setKV } from '@/lib/kv';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -26,7 +25,12 @@ export default function Dashboard() {
 
   const handleAddPhone = async () => {
     try {
-      await loginWithTelegram(newPhone, '');
+      const response = await fetch('/api/telegram/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: newPhone, code: '' }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error);
       setIsCodeSent(true);
     } catch (err) {
       setError('Erro ao enviar código: ' + err.message);
@@ -35,7 +39,12 @@ export default function Dashboard() {
 
   const handleVerifyPhone = async () => {
     try {
-      await loginWithTelegram(newPhone, code);
+      const response = await fetch('/api/telegram/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: newPhone, code }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error);
       const userData = JSON.parse(await getKV(`user:${session.user.email}`));
       userData.phones = [...new Set([...userData.phones, newPhone])];
       await setKV(`user:${session.user.email}`, JSON.stringify(userData));
