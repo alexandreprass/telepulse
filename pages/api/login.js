@@ -26,20 +26,24 @@ export default async function handler(req, res) {
     }
 
     let user;
-    try {
-      if (typeof userData !== 'string') {
-        console.error(`[Login API] userData não é string:`, userData);
-        return res.status(500).json({ error: 'Formato de dados inválido' });
+    if (typeof userData === 'string') {
+      try {
+        user = JSON.parse(userData);
+        console.log(`[Login API] Usuário parseado de string:`, user);
+      } catch (parseError) {
+        console.error(`[Login API] Erro ao parsear userData string:`, parseError, `userData:`, userData);
+        return res.status(500).json({ error: 'Dados do usuário inválidos' });
       }
-      user = JSON.parse(userData);
-      console.log(`[Login API] Usuário parseado com sucesso:`, user);
-    } catch (parseError) {
-      console.error(`[Login API] Erro ao parsear userData:`, parseError, `userData bruto:`, userData);
-      return res.status(500).json({ error: 'Dados do usuário inválidos' });
+    } else if (typeof userData === 'object' && userData !== null) {
+      user = userData;
+      console.log(`[Login API] Usuário recebido como objeto:`, user);
+    } else {
+      console.error(`[Login API] Formato de userData inválido:`, userData);
+      return res.status(500).json({ error: 'Formato de dados inválido' });
     }
 
-    if (!user.password) {
-      console.error(`[Login API] Senha ausente:`, user);
+    if (!user.password || !user.email) {
+      console.error(`[Login API] Dados do usuário incompletos:`, user);
       return res.status(500).json({ error: 'Dados do usuário incompletos' });
     }
 
