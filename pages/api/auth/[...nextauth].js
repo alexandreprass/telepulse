@@ -21,7 +21,8 @@ export default NextAuth({
           const emailKey = `user:${credentials.email.trim().toLowerCase()}`;
           console.log(`[NextAuth] Buscando usuário com chave: ${emailKey}`);
           const userData = await getKV(emailKey);
-          console.log(`[NextAuth] userData retornado:`, userData);
+          console.log(`[NextAuth] userData bruto retornado:`, userData);
+          console.log(`[NextAuth] Tipo de userData:`, typeof userData);
 
           if (!userData) {
             console.log(`[NextAuth] Usuário não encontrado para chave: ${emailKey}`);
@@ -35,9 +36,9 @@ export default NextAuth({
               throw new Error('Formato de dados inválido');
             }
             user = JSON.parse(userData);
-            console.log(`[NextAuth] Usuário parseado:`, user);
+            console.log(`[NextAuth] Usuário parseado com sucesso:`, user);
           } catch (parseError) {
-            console.error(`[NextAuth] Erro ao parsear userData:`, parseError, `userData:`, userData);
+            console.error(`[NextAuth] Erro ao parsear userData:`, parseError, `userData bruto:`, userData);
             throw new Error('Dados do usuário inválidos');
           }
 
