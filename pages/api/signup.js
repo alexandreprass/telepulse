@@ -13,23 +13,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log(`[Signup API] Verificando usuário: user:${email}`);
-    const existingUserData = await getKV(`user:${email}`);
+    const emailKey = `user:${email.trim().toLowerCase()}`;
+    console.log(`[Signup API] Verificando usuário: ${emailKey}`);
+    const existingUserData = await getKV(emailKey);
     if (existingUserData) {
-      console.log(`[Signup API] Usuário já existe: ${email}`);
+      console.log(`[Signup API] Usuário já existe: ${emailKey}`);
       return res.status(400).json({ error: 'Usuário já cadastrado' });
     }
 
-    console.log(`[Signup API] Criando usuário: ${email}`);
+    console.log(`[Signup API] Criando usuário: ${emailKey}`);
     const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
       name,
-      email,
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
       phones: [],
     };
-    await setKV(`user:${email}`, JSON.stringify(userData));
-    console.log(`[Signup API] Usuário salvo: ${email}`);
+    const userDataString = JSON.stringify(userData);
+    console.log(`[Signup API] Salvando userData:`, userDataString);
+    await setKV(emailKey, userDataString);
+    console.log(`[Signup API] Usuário salvo: ${emailKey}`);
 
     return res.status(200).json({ message: 'Usuário cadastrado com sucesso' });
   } catch (err) {
