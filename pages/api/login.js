@@ -1,5 +1,6 @@
 import { getKV } from '@/lib/kv';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,7 +18,6 @@ export default async function handler(req, res) {
     console.log(`[Login API] Buscando usuário: ${emailKey}`);
     const userData = await getKV(emailKey);
     console.log(`[Login API] userData bruto retornado:`, userData);
-    console.log(`[Login API] Tipo de userData:`, typeof userData);
 
     if (!userData) {
       console.log(`[Login API] Usuário não encontrado: ${emailKey}`);
@@ -26,36 +26,29 @@ export default async function handler(req, res) {
 
     let user;
     if (typeof userData === 'string') {
-      try {
-        user = JSON.parse(userData);
-        console.log(`[Login API] Usuário parseado de string:`, user);
-      } catch (parseError) {
-        console.error(`[Login API] Erro ao parsear userData string:`, parseError, `userData:`, userData);
-        return res.status(500).json({ error: 'Dados do usuário inválidos' });
-      }
+      user = JSON.parse(userData);
     } else if (typeof userData === 'object' && userData !== null) {
       user = userData;
-      console.log(`[Login API] Usuário recebido como objeto:`, user);
     } else {
-      console.error(`[Login API] Formato de userData inválido:`, userData);
       return res.status(500).json({ error: 'Formato de dados inválido' });
     }
 
-    if (!user.password || !user.email) {
-      console.error(`[Login API] Dados do usuário incompletos:`, user);
-      return res.status(500).json({ error: 'Dados do usuário incompletos' });
-    }
-
-    console.log(`[Login API] Comparando senhas para ${email}`);
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[Login API] Senha incorreta para ${email}`);
       return res.status(401).json({ error: 'Senha incorreta' });
     }
+
+    // Gerar token JWT
+    const token = jwt.sign(
+      { email: user.email, name: user.name },
+      process.env.JWT_SECRET || 'seu-segredo-aqui', // Substitua por uma variável de ambiente
+      { expiresIn: '1h' }
+    );
 
     console.log(`[Login API] Login bem-sucedido para ${email}`);
     return res.status(200).json({
       message: 'Login bem-sucedido',
+      token,
       user: { email: user.email, name: user.name, phones: user.phones || [] },
     });
   } catch (err) {
