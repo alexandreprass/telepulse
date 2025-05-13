@@ -14,7 +14,7 @@ export default function Signup() {
     setError('');
 
     try {
-      // Chamar a rota API para cadastrar
+      console.log('[Signup] Enviando cadastro:', { name, email });
       const response = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,24 +22,28 @@ export default function Signup() {
       });
 
       const data = await response.json();
+      console.log('[Signup] Resposta de /api/signup:', data);
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao cadastrar');
+        throw new Error(data.error || 'Erro ao cadastrar usuário');
       }
 
-      // Fazer login automático
+      console.log('[Signup] Tentando login automático para:', email);
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
       });
 
+      console.log('[Signup] Resultado do signIn:', result);
       if (result.error) {
         throw new Error(result.error);
       }
 
+      console.log('[Signup] Redirecionando para /dashboard');
       router.push('/dashboard');
     } catch (err) {
-      setError(`Erro ao cadastrar: ${err.message}`);
+      console.error('[Signup] Erro:', err);
+      setError(`Erro: ${err.message}`);
     }
   };
 
@@ -89,6 +93,9 @@ export default function Signup() {
             Cadastrar
           </button>
         </form>
+        <p className="mt-4 text-center">
+          Já tem conta? <a href="/" className="text-telegram-blue hover:underline">Entrar</a>
+        </p>
       </div>
     </div>
   );
