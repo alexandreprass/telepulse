@@ -1,4 +1,4 @@
-import { deleteTab } from '@/lib/kv';
+import { deleteTab } from '@/lib/kv.js';
 import { getSession } from 'next-auth/react';
 
 export default async function handler(req, res) {
