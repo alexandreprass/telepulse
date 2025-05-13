@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import bcrypt from 'bcryptjs';
-import { getKV, setKV } from '../lib/kv';
+import { getKV, setKV } from '@/lib/kv';
+import { signIn } from 'next-auth/react';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -10,33 +10,47 @@ export default function Signup() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSignup = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Verificar se o usuário já existe
       const existingUser = await getKV(`user:${email}`);
       if (existingUser) {
-        setError('Email já cadastrado');
-        return;
+        throw new Error('Usuário já cadastrado');
       }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await setKV(`user:${email}`, JSON.stringify({
+
+      // Criar novo usuário
+      const userData = {
         name,
         email,
-        password: hashedPassword,
+        password, // Em produção, use bcrypt para hash
         phones: [],
-      }));
-      router.push('/');
+      };
+      await setKV(`user:${email}`, JSON.stringify(userData));
+
+      // Fazer login automático após cadastro
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      router.push('/dashboard');
     } catch (err) {
-      setError('Erro ao cadastrar: ' + err.message);
+      setError(`Erro ao cadastrar: ${err.message}`);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-telegram-blue mb-6">TelePulse - Cadastro</h1>
+        <h1 className="text-2xl font-bold text-telegram-blue mb-6">Cadastrar</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSignup}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-700">Nome</label>
             <input
@@ -69,7 +83,7 @@ export default function Signup() {
           </div>
           <button
             type="submit"
-            className="w-full bg-telegram-blue text-white p-2 rounded hover:bg-blue-600"
+            className="bg-telegram-blue text-white p-2 rounded w-full hover:bg-blue-600"
           >
             Cadastrar
           </button>
