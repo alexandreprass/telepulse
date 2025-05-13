@@ -1,6 +1,5 @@
 import { getKV } from '@/lib/kv';
 import bcrypt from 'bcryptjs';
-import { signIn } from 'next-auth/react';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -54,21 +53,11 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    console.log(`[Login API] Tentando signIn para ${email}`);
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-    });
-
-    console.log(`[Login API] Resultado do signIn:`, result);
-    if (result.error) {
-      console.error(`[Login API] Erro no signIn:`, result.error);
-      return res.status(401).json({ error: result.error });
-    }
-
     console.log(`[Login API] Login bem-sucedido para ${email}`);
-    return res.status(200).json({ message: 'Login bem-sucedido' });
+    return res.status(200).json({
+      message: 'Login bem-sucedido',
+      user: { email: user.email, name: user.name, phones: user.phones || [] },
+    });
   } catch (err) {
     console.error(`[Login API] Erro ao autenticar:`, err);
     return res.status(500).json({ error: `Erro ao autenticar: ${err.message}` });
