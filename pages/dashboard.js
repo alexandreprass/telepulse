@@ -1,4 +1,4 @@
-import { useSession, signOut } from 'next-auth/react';
+import { getSession, useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
@@ -6,10 +6,10 @@ import BulkMessage from '../components/BulkMessage';
 import AddMembers from '../components/AddMembers';
 import { getKV, setKV } from '@/lib/kv';
 
-export default function Dashboard() {
+export default function Dashboard({ initialSession }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [phones, setPhones] = useState([]);
+  const [phones, setPhones] = useState(initialSession?.user.phones || []);
   const [newPhone, setNewPhone] = useState('');
   const [code, setCode] = useState('');
   const [isCodeSent, setIsCodeSent] = useState(false);
@@ -77,9 +77,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold text-telegram-blue mb-6">Bem-vindo ao TelePulse, {session?.user.name}</h1>
+        <h1 className="text-3xl font-bold text-telegram-blue mb-6">
+          Bem-vindo ao TelePulse, {session?.user.name}
+        </h1>
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-xl font-bold text-telegram-blue mb-4">Gerenciar Números de Telefone</h2>
+          <h2 className="text-xl font-bold text-telegram-blue mb-4">
+            Gerenciar Números de Telefone
+          </h2>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           <div className="mb-4">
             <label className="block text-gray-700">Adicionar Novo Número</label>
@@ -141,4 +145,19 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+  return {
+    props: { initialSession: session },
+  };
 }
