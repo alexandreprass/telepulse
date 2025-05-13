@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { getKV, setKV } from '@/lib/kv';
 import { signIn } from 'next-auth/react';
-import bcrypt from 'bcryptjs';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -13,22 +11,20 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Verificar se o usuário já existe
-      const existingUserData = await getKV(`user:${email}`);
-      if (existingUserData) {
-        throw new Error('Usuário já cadastrado');
-      }
+    setError('');
 
-      // Criar novo usuário com senha hasheada
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const userData = {
-        name,
-        email,
-        password: hashedPassword,
-        phones: [],
-      };
-      await setKV(`user:${email}`, JSON.stringify(userData));
+    try {
+      // Chamar a rota API para cadastrar
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao cadastrar');
+      }
 
       // Fazer login automático
       const result = await signIn('credentials', {
@@ -61,6 +57,7 @@ export default function Signup() {
               onChange={(e) => setName(e.target.value)}
               className="w-full p-2 border rounded"
               required
+              autoComplete="name"
             />
           </div>
           <div className="mb-4">
@@ -71,6 +68,7 @@ export default function Signup() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border rounded"
               required
+              autoComplete="email"
             />
           </div>
           <div className="mb-4">
@@ -81,6 +79,7 @@ export default function Signup() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 border rounded"
               required
+              autoComplete="new-password"
             />
           </div>
           <button
