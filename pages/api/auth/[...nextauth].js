@@ -30,15 +30,19 @@ export default NextAuth({
 
           let user;
           try {
+            if (typeof userData !== 'string') {
+              console.error(`[NextAuth] userData não é string:`, userData);
+              throw new Error('Formato de dados inválido');
+            }
             user = JSON.parse(userData);
             console.log(`[NextAuth] Usuário parseado:`, user);
           } catch (parseError) {
-            console.error(`[NextAuth] Erro ao parsear userData:`, parseError);
+            console.error(`[NextAuth] Erro ao parsear userData:`, parseError, `userData:`, userData);
             throw new Error('Dados do usuário inválidos');
           }
 
-          if (!user.password) {
-            console.error(`[NextAuth] Senha não encontrada no usuário:`, user);
+          if (!user || !user.password) {
+            console.error(`[NextAuth] Usuário ou senha ausentes:`, user);
             throw new Error('Dados do usuário incompletos');
           }
 
