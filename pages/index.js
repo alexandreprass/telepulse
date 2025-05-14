@@ -5,10 +5,13 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Novo estado
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Evita múltiplas submissões
+    setIsLoading(true);
     setError('');
 
     try {
@@ -32,6 +35,8 @@ export default function Login() {
     } catch (err) {
       console.error('[Login] Erro:', err);
       setError(`Erro: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,8 +71,9 @@ export default function Login() {
           <button
             type="submit"
             className="bg-telegram-blue text-white p-2 rounded w-full hover:bg-blue-600"
+            disabled={isLoading}
           >
-            Entrar
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         <p className="mt-4 text-center">
