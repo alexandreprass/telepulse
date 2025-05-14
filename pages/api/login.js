@@ -38,10 +38,9 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Gerar token JWT
     const token = jwt.sign(
       { email: user.email, name: user.name },
-      process.env.JWT_SECRET || 'seu-segredo-aqui', // Substitua por uma variável de ambiente
+      process.env.JWT_SECRET || 'seu-segredo-aqui',
       { expiresIn: '1h' }
     );
 
