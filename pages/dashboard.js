@@ -18,7 +18,7 @@ export default function Dashboard() {
       localStorage.removeItem('token');
       router.push('/');
     }
-  }, []);
+  }, [router]); // Dependência para evitar loops
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
