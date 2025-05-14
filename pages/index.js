@@ -5,12 +5,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Novo estado
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return; // Evita múltiplas submissões
+    if (isLoading) return;
     setIsLoading(true);
     setError('');
 
