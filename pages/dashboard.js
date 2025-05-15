@@ -14,7 +14,7 @@ export default function Dashboard() {
     }
 
     try {
-      jwt.verify(token, process.env.JWT_SECRET || '12345789');
+      jwt.verify(token, process.env.JWT_SECRET || '123456789');
       console.log('[Dashboard] Token válido, usuário autenticado');
     } catch (err) {
       console.error('[Dashboard] Token inválido:', err);
