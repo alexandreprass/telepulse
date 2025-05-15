@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import jwt_decode from 'jwt-decode';
+import axios from 'axios';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -30,6 +31,20 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  const handleTelegramLogin = async () => {
+    try {
+      const response = await axios.get('/api/auth/telegram/login');
+      if (response.status === 200) {
+        alert('Login no Telegram realizado com sucesso!');
+      } else {
+        alert('Erro ao realizar login no Telegram.');
+      }
+    } catch (error) {
+      console.error('[Telegram Login] Erro:', error);
+      alert('Erro ao realizar login no Telegram: ' + error.message);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     router.push('/');
@@ -44,7 +59,7 @@ export default function Dashboard() {
         {/* Botões para funcionalidades */}
         <div className="mt-6 space-y-4">
           <button
-            onClick={() => router.push('/telegram/login')}
+            onClick={handleTelegramLogin}
             className="bg-blue-500 text-white py-2 px-4 rounded w-full hover:bg-blue-600"
           >
             Login no Telegram
