@@ -1,62 +1,43 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import jwt_decode from 'jwt-decode';
-import axios from 'axios';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.log('[Dashboard] Token não encontrado, redirecionando para /');
-      router.push('/');
-      return;
-    }
-
-    try {
-      const decoded = jwt_decode(token);
-      console.log('[Dashboard] Token decodificado:', decoded);
-
-      const currentTime = Date.now() / 1000; // Tempo atual em segundos
-      if (decoded.exp && decoded.exp < currentTime) {
-        throw new Error('Token expirado');
-      }
-
-      console.log('[Dashboard] Token válido, usuário autenticado');
-    } catch (err) {
-      console.error('[Dashboard] Token inválido:', err);
-      localStorage.removeItem('token');
+    if (status === 'unauthenticated') {
       router.push('/');
     }
-  }, [router]);
+  }, [status, router]);
 
   const handleTelegramLogin = async () => {
     try {
-      const response = await axios.get('/api/auth/telegram/login');
-      if (response.status === 200) {
-        alert('Login no Telegram realizado com sucesso!');
-      } else {
-        alert('Erro ao realizar login no Telegram.');
-      }
+      const response = await fetch('/api/telegram/logins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: 'SEU_NUMERO', code: 'SEU_CODIGO' }), // Ajuste conforme necessário
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao logar no Telegram');
+      alert('Login no Telegram realizado com sucesso!');
     } catch (error) {
-      console.error('[Telegram Login] Erro:', error);
       alert('Erro ao realizar login no Telegram: ' + error.message);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/');
+    signOut({ callbackUrl: '/' });
   };
+
+  if (status === 'loading') return <p>Carregando...</p>;
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold text-telegram-blue mb-6">Dashboard</h1>
-        <p>Bem-vindo ao seu painel! Escolha uma funcionalidade abaixo:</p>
-
-        {/* Botões para funcionalidades */}
+        <h1 className="text-2xl font-bold text-blue-500 mb-6">Dashboard</h1>
+        <p>Bem-vindo ao seu painel, {session?.user?.name || 'Usuário'}! Escolha uma funcionalidade abaixo:</p>
         <div className="mt-6 space-y-4">
           <button
             onClick={handleTelegramLogin}
