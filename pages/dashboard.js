@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import jwt from 'jsonwebtoken';
+import jwt_decode from 'jwt-decode'; // Use jwt-decode para decodificar o token sem verificá-lo
 
 export default function Dashboard() {
   const router = useRouter();
@@ -14,7 +14,16 @@ export default function Dashboard() {
     }
 
     try {
-      jwt.verify(token, process.env.JWT_SECRET || '123456789');
+      // Decodifique o token para obter as informações do usuário
+      const decoded = jwt_decode(token);
+      console.log('[Dashboard] Token decodificado:', decoded);
+
+      // Opcional: verifique se o token ainda é válido com base no tempo de expiração
+      const currentTime = Date.now() / 1000; // Tempo atual em segundos
+      if (decoded.exp && decoded.exp < currentTime) {
+        throw new Error('Token expirado');
+      }
+
       console.log('[Dashboard] Token válido, usuário autenticado');
     } catch (err) {
       console.error('[Dashboard] Token inválido:', err);
